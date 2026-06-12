@@ -3,31 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>근무 편성 자동화</title>
+<title>드리미 근무 편성 시스템</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#222;font-size:13px;}
-/* 로그인 전용 - 전역 flex 영향 차단 */
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);}
-#login-screen *{display:block;float:none;flex:none;width:auto;}
-#login-screen .lbox{background:#fff;border-radius:16px;padding:40px;width:380px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.2);}
-#login-screen .ltitle{text-align:center;margin-bottom:24px;}
-#login-screen .ltitle h2{font-size:22px;font-weight:800;color:#1e3a5f;margin-top:8px;}
-#login-screen .ltitle p{font-size:12px;color:#888;margin-top:4px;}
-#login-screen .lgroup{margin-bottom:14px;}
-#login-screen .lgroup .llabel{font-size:12px;font-weight:600;color:#555;margin-bottom:6px;}
-#login-screen .lgroup input{width:100%;padding:10px 14px;font-size:14px;border:1px solid #d0d5dd;border-radius:8px;outline:none;}
-#login-screen .lbtn{width:100%;padding:12px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:#1e3a5f;color:#fff;cursor:pointer;margin-top:4px;}
-#login-screen .lbtn:hover{background:#16304f;}
-#login-screen .lerror{color:#991b1b;font-size:12px;min-height:16px;margin-bottom:4px;}
-#login-screen .lnotice{margin-top:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:12px;color:#1e40af;line-height:1.7;}
+header{background:#1e3a5f;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
 header h1{font-size:17px;font-weight:700;}
-header span{font-size:11px;opacity:.7;}
 .header-user{display:flex;align-items:center;gap:10px;font-size:12px;}
 .header-user .user-name{font-weight:700;}
-.header-user .user-badge{padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;}
+.user-badge{padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;}
 .badge-admin{background:#fcd34d;color:#92400e;}
 .badge-dreamy{background:#93c5fd;color:#1e3a5f;}
 .badge-regular{background:#bbf7d0;color:#166534;}
@@ -72,19 +58,6 @@ label{font-size:11px;color:#666;font-weight:600;display:block;margin-bottom:3px;
 .cb-group label{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:500;color:#333;cursor:pointer;margin:0;background:#f3f4f6;padding:4px 8px;border-radius:6px;border:1px solid #e0e4ea;}
 .cb-group input[type=checkbox]{width:auto;margin:0;}
 .cb-group label:has(input:checked){background:#dbeafe;border-color:#93c5fd;}
-/* LOGIN */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);}
-.login-box{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;}
-.login-logo{text-align:center;margin-bottom:28px;}
-.login-logo h2{font-size:22px;font-weight:800;color:#1e3a5f;margin-top:8px;}
-.login-logo p{font-size:12px;color:#888;margin-top:4px;}
-.login-input-group{display:block;width:100%;margin-bottom:14px;}
-.login-input-group label{display:block;font-size:12px;color:#555;font-weight:600;margin-bottom:5px;}
-.login-input-group input{display:block;width:100%;padding:10px 14px;font-size:14px;border-radius:8px;border:1px solid #d0d5dd;}
-.login-btn{display:block;width:100%;padding:12px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:#1e3a5f;color:#fff;cursor:pointer;margin-top:8px;}
-.login-btn:hover{background:#16304f;}
-.login-error{color:#991b1b;font-size:12px;margin-top:8px;text-align:center;min-height:18px;}
-/* TT */
 .tt-wrap{overflow-x:auto;margin-top:8px;user-select:none;}
 .tt-table{border-collapse:collapse;table-layout:fixed;}
 .tt-table th,.tt-table td{border:1px solid #d1d5db;font-size:11px;padding:0;text-align:center;}
@@ -154,43 +127,135 @@ tr:hover td{background:#fafbfc;}
 <body>
 
 <!-- ===== LOGIN ===== -->
-<div id="login-screen" class="login-wrap">
-  <div class="login-box">
-    <div class="login-logo">
-      <div style="font-size:40px;">🎬</div>
-      <h2>근무 편성 시스템</h2>
-      <p>사번과 비밀번호로 로그인하세요</p>
+<div id="login-screen">
+<style>
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  padding: 20px;
+}
+#login-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+#login-box .l-logo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+#login-box .l-logo img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 10px;
+}
+#login-box .l-logo .l-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1e3a5f;
+}
+#login-box .l-logo .l-sub {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+#login-box .l-field {
+  margin-bottom: 14px;
+}
+#login-box .l-field .l-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+#login-box .l-field input {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 15px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+#login-box .l-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  background: #1e3a5f;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
+#login-box .l-btn:hover { background: #16304f; }
+#login-box .l-error {
+  color: #991b1b;
+  font-size: 12px;
+  min-height: 18px;
+  margin-bottom: 4px;
+}
+#login-box .l-notice {
+  margin-top: 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  color: #1e40af;
+  line-height: 1.7;
+}
+</style>
+  <div id="login-box">
+    <div class="l-logo">
+      <img src="https://www.lotte.co.kr/common/w/images/img_symbol_logo.png" alt="LOTTE" onerror="this.style.display='none'">
+      <div class="l-title">드리미 근무 편성 시스템</div>
+      <div class="l-sub">사번과 비밀번호로 로그인하세요</div>
     </div>
-    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#1e40af;line-height:1.6;">
-      💡 <strong>최초 로그인 안내</strong><br>
-      처음 로그인 시 비밀번호란에 <strong>아무 숫자나 입력</strong>하세요.<br>
-      비밀번호 설정 화면이 뜨면 새 비밀번호로 변경 후 이용하세요.
-    </div>
-    </div>
-      <div class="login-input-group">
-        <label>사번</label>
+
+    <!-- 일반 로그인 -->
+    <div id="login-form">
+      <div class="l-field">
+        <div class="l-label">사번</div>
         <input type="text" id="login-empno" placeholder="사번 입력" autocomplete="username">
       </div>
-      <div class="login-input-group">
-        <label>비밀번호</label>
-        <input type="password" id="login-pw" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="l-field">
+        <div class="l-label">비밀번호</div>
+        <input type="password" id="login-pw" placeholder="비밀번호 입력" autocomplete="current-password">
       </div>
-      <div class="login-error" id="login-error"></div>
-      <button class="login-btn" onclick="doLogin()">로그인</button>
+      <div class="l-error" id="login-error"></div>
+      <button class="l-btn" id="btn-login">로그인</button>
+      <div class="l-notice">
+        💡 <strong>최초 로그인 안내</strong><br>
+        처음 로그인 시 비밀번호란에 <strong>아무 숫자나 입력</strong>하세요.<br>
+        비밀번호 설정 화면이 뜨면 새 비밀번호로 변경 후 이용하세요.
+      </div>
     </div>
+
     <!-- 첫 로그인 비밀번호 설정 -->
     <div id="first-login-form" style="display:none;">
-      <div class="alert alert-info" style="margin-bottom:14px;">👋 첫 로그인입니다! 사용할 비밀번호를 설정해 주세요.</div>
-      <div class="login-input-group">
-        <label>새 비밀번호 (4자리 이상)</label>
+      <div class="l-notice" style="margin-bottom:16px;">
+        👋 첫 로그인입니다! 사용할 비밀번호를 설정해 주세요.
+      </div>
+      <div class="l-field">
+        <div class="l-label">새 비밀번호 (4자리 이상)</div>
         <input type="password" id="new-pw" placeholder="새 비밀번호">
       </div>
-      <div class="login-input-group">
-        <label>비밀번호 확인</label>
-        <input type="password" id="new-pw-confirm" placeholder="비밀번호 재입력" onkeydown="if(event.key==='Enter')doSetPassword()">
+      <div class="l-field">
+        <div class="l-label">비밀번호 확인</div>
+        <input type="password" id="new-pw-confirm" placeholder="비밀번호 재입력">
       </div>
-      <div class="login-error" id="pw-error"></div>
-      <button class="login-btn" onclick="doSetPassword()">비밀번호 설정 후 로그인</button>
+      <div class="l-error" id="pw-error"></div>
+      <button class="l-btn" id="btn-setpw">비밀번호 설정 후 로그인</button>
     </div>
   </div>
 </div>
@@ -198,19 +263,16 @@ tr:hover td{background:#fafbfc;}
 <!-- ===== APP ===== -->
 <div id="app-screen" style="display:none;">
 <header>
-  <div>
-    <h1>🎬 근무 편성 자동화</h1>
-    <span>주간 편성 시스템 (목요일 ~ 수요일)</span>
-  </div>
+  <h1>🎬 드리미 근무 편성 시스템</h1>
   <div class="header-user">
     <span class="user-name" id="header-username"></span>
     <span class="user-badge" id="header-badge"></span>
-    <button class="btn btn-secondary btn-sm" onclick="doLogout()">로그아웃</button>
-    <button class="btn btn-secondary btn-sm" onclick="openChangePw()">비밀번호 변경</button>
+    <button class="btn btn-secondary btn-sm" id="btn-logout">로그아웃</button>
+    <button class="btn btn-secondary btn-sm" id="btn-changepw">비밀번호 변경</button>
   </div>
 </header>
 
-<div class="tabs" id="main-tabs">
+<div class="tabs">
   <div class="tab active" onclick="showTab('dashboard')">📊 대시보드</div>
   <div class="tab" id="tab-staff" onclick="showTab('staff')">👥 직원 관리</div>
   <div class="tab" onclick="showTab('timetable')">📅 타임테이블</div>
@@ -238,16 +300,14 @@ tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
-<!-- STAFF (관리자 전용) -->
+<!-- STAFF -->
 <div id="page-staff" class="page">
   <div class="card">
     <div class="flex-between">
       <div class="card-title">👥 직원 관리</div>
-      <div class="flex">
-        <button class="btn btn-primary" onclick="openAddStaff()">+ 직원 추가</button>
-      </div>
+      <button class="btn btn-primary" onclick="openAddStaff()">+ 직원 추가</button>
     </div>
-    <div class="alert alert-info">고정 정보는 직원 추가 시 설정합니다. 직원 중 관리자를 지정할 수 있어요.</div>
+    <div class="alert alert-info">고정 정보는 직원 추가 시 설정합니다. 관리자 권한은 직원 수정에서 부여할 수 있어요.</div>
     <div id="staff-table-wrap"><div class="alert alert-info">등록된 직원이 없습니다.</div></div>
   </div>
 </div>
@@ -324,7 +384,6 @@ tr:hover td{background:#fafbfc;}
       </div>
       <span style="font-size:12px;color:#888;" id="form-submit-count"></span>
     </div>
-    <!-- 관리자: 전체 현황 / 드리미: 본인 신청 폼 -->
     <div id="form-content"></div>
   </div>
 </div>
@@ -334,7 +393,7 @@ tr:hover td{background:#fafbfc;}
   <!-- 월별 근무 통계 -->
   <div class="card">
     <div class="card-title">📊 월별 근무 통계</div>
-    <div class="alert alert-info">타임테이블 기준으로 드리미 월별 실근무시간을 집계합니다. (휴게시간 자동 제외: 4h 미만 0분 / 4h 이상 30분 / 8h 이상 60분)</div>
+    <div class="alert alert-info">타임테이블 기준 드리미 월별 실근무시간 집계입니다. (4시간 미만: 휴게 없음 / 4시간 이상: 휴게 30분 자동 제외)</div>
     <div class="flex" style="margin-bottom:16px;">
       <select id="stat-month" style="width:auto;" onchange="renderMonthlyStats()"></select>
       <button class="btn btn-primary btn-sm" onclick="renderMonthlyStats()">조회</button>
@@ -342,18 +401,13 @@ tr:hover td{background:#fafbfc;}
     </div>
     <div id="monthly-stats-content"></div>
   </div>
+  <!-- 신청 기한 -->
   <div class="card">
     <div class="card-title">⏰ 스케줄 신청 기한 설정</div>
-    <div class="alert alert-info">설정된 기간에만 드리미 직원이 스케줄 신청을 할 수 있습니다. 기한 외에는 신청 폼이 잠깁니다.</div>
+    <div class="alert alert-info">설정된 기간에만 드리미 직원이 스케줄 신청을 할 수 있습니다.</div>
     <div class="grid2" style="margin-bottom:14px;">
-      <div>
-        <label>신청 시작 일시</label>
-        <input type="datetime-local" id="request-start">
-      </div>
-      <div>
-        <label>신청 마감 일시</label>
-        <input type="datetime-local" id="request-end">
-      </div>
+      <div><label>신청 시작 일시</label><input type="datetime-local" id="request-start"></div>
+      <div><label>신청 마감 일시</label><input type="datetime-local" id="request-end"></div>
     </div>
     <div class="flex">
       <button class="btn btn-primary" onclick="saveRequestPeriod()">저장</button>
@@ -362,6 +416,9 @@ tr:hover td{background:#fafbfc;}
     </div>
     <div id="request-period-preview" style="margin-top:12px;"></div>
   </div>
+  <!-- 주말/공휴일 한도 -->
+  <div class="card">
+    <div class="card-title">🚫 주말·공휴일 휴무 신청 한도</div>
     <div class="alert alert-info">드리미 직원이 한 달 동안 주말 또는 공휴일에 신청할 수 있는 최대 휴무 횟수입니다.</div>
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -380,6 +437,7 @@ tr:hover td{background:#fafbfc;}
       <div id="quota-status-table"></div>
     </div>
   </div>
+  <!-- 공휴일 관리 -->
   <div class="card">
     <div class="card-title">🗓 공휴일 관리</div>
     <div class="flex-between" style="margin-bottom:12px;">
@@ -388,7 +446,7 @@ tr:hover td{background:#fafbfc;}
         <span id="cal-month-label" style="font-size:14px;font-weight:700;min-width:100px;text-align:center;"></span>
         <button onclick="calNextMonth()" class="btn btn-secondary btn-sm">▶</button>
       </div>
-      <span style="font-size:11px;color:#888;">날짜 클릭으로 공휴일 등록/해제</span>
+      <span style="font-size:11px;color:#888;">평일 클릭으로 공휴일 등록/해제 (토·일 자동 처리)</span>
     </div>
     <div class="cal-header">
       <div style="color:#991b1b;">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div style="color:#991b1b;">토</div>
@@ -404,7 +462,7 @@ tr:hover td{background:#fafbfc;}
 <!-- EXPORT -->
 <div id="page-export" class="page">
   <div class="card" style="border:2px solid #7c3aed;">
-    <div class="card-title" style="color:#7c3aed;">💾 앱 데이터</div>
+    <div class="card-title" style="color:#7c3aed;">💾 앱 데이터 백업</div>
     <div class="alert alert-info">Supabase DB에 실시간 저장됩니다. 아래는 로컬 백업용입니다.</div>
     <button class="btn" style="background:#7c3aed;color:#fff;" onclick="saveAppData()">📥 JSON 백업 다운로드</button>
     <div id="save-status" style="margin-top:10px;font-size:12px;color:#166534;"></div>
@@ -418,7 +476,7 @@ tr:hover td{background:#fafbfc;}
     </div>
     <div class="grid2">
       <div class="card" style="border:2px solid #1e3a5f;margin-bottom:0;">
-        <div style="font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">📊 주간 근무표</div>
+        <div style="font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">📊 주간 근무표 (게시용)</div>
         <button class="btn btn-primary" style="width:100%;" onclick="exportScheduleExcel()">엑셀 다운로드</button>
       </div>
       <div class="card" style="border:2px solid #166534;margin-bottom:0;">
@@ -512,7 +570,7 @@ tr:hover td{background:#fafbfc;}
       </div>
       <div class="grid2">
         <div><label>출근 시간</label><input type="time" id="slot-start" step="1800" oninput="calcEndTime()"></div>
-        <div><label>근무 시간</label><input type="number" id="slot-workhours" step="0.5" min="1" max="12" placeholder="예: 6.0" oninput="calcEndTime()"></div>
+        <div><label>근무 시간 (예: 6.0)</label><input type="number" id="slot-workhours" step="0.5" min="1" max="12" placeholder="예: 6.0" oninput="calcEndTime()"></div>
       </div>
       <div style="background:#f8fafc;border-radius:8px;padding:12px;font-size:12px;" id="slot-calc-preview">
         <span style="color:#888;">출근 시간과 근무 시간을 입력하면 퇴근 시간이 자동 산출됩니다.</span>
@@ -530,9 +588,9 @@ tr:hover td{background:#fafbfc;}
   <div class="modal">
     <div class="modal-title">🔐 비밀번호 변경</div>
     <div style="display:grid;gap:12px;">
-      <div><label>현재 비밀번호</label><input type="password" id="cur-pw" placeholder="현재 비밀번호"></div>
-      <div><label>새 비밀번호</label><input type="password" id="change-new-pw" placeholder="새 비밀번호 (4자리 이상)"></div>
-      <div><label>새 비밀번호 확인</label><input type="password" id="change-new-pw2" placeholder="새 비밀번호 재입력"></div>
+      <div><label>현재 비밀번호</label><input type="password" id="cur-pw"></div>
+      <div><label>새 비밀번호 (4자리 이상)</label><input type="password" id="change-new-pw"></div>
+      <div><label>새 비밀번호 확인</label><input type="password" id="change-new-pw2"></div>
       <div id="changepw-error" style="color:#991b1b;font-size:12px;min-height:16px;"></div>
     </div>
     <div class="flex" style="margin-top:14px;justify-content:flex-end;">
@@ -543,30 +601,10 @@ tr:hover td{background:#fafbfc;}
 </div>
 
 <script>
-// ===== SUPABASE =====
 const SUPA_URL='https://ykhwnnsutwvjbgoiqwdm.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlraHdubnN1dHd2amJnb2lxd2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNTc0ODAsImV4cCI6MjA5NjczMzQ4MH0.T3uvoORu21IZzRH8CNm8_e9woowBF9o3soU-cyKXaxw';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
-// 스케줄 신청 기한
-let requestPeriod = { start: null, end: null }; // 'YYYY-MM-DD HH:mm'
-
-function isRequestOpen() {
-  if (!requestPeriod.start || !requestPeriod.end) return false;
-  const now = new Date();
-  return now >= new Date(requestPeriod.start) && now <= new Date(requestPeriod.end);
-}
-function isRequestNotYet() {
-  if (!requestPeriod.start) return false;
-  return new Date() < new Date(requestPeriod.start);
-}
-function isRequestClosed() {
-  if (!requestPeriod.end) return false;
-  return new Date() > new Date(requestPeriod.end);
-}
-function isAdmin(){return currentUser?.isAdmin||false;}
-function isDreamy(){return currentUser?.type==='드리미'&&!isAdmin();}
-function isRegular(){return currentUser?.type==='정규직'&&!isAdmin();} // 확정된 weekKey 목록
 const DAYS_KO=['일','월','화','수','목','금','토'];
 const POS_GROUP={'웰컴':'welcome','매점오픈':'store_open','매점미들':'store_mid','매점마감':'store_close','엔젤오픈':'angel','엔젤마감':'angel','샤롯데':'charlotte','직원':'staff'};
 const POS_LABEL={'welcome':'웰컴','store_open':'매점 오픈','store_mid':'매점 미들','store_close':'매점 마감','angel':'엔젤','charlotte':'샤롯데','staff':'직원'};
@@ -579,25 +617,53 @@ const OP_START=6*60,OP_SLOTS=42;
 function slotToTime(i){const m=OP_START+i*30;return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
 function timeToSlot(t){const[h,m]=t.split(':').map(Number);let mins=h*60+m;if(mins<OP_START)mins+=24*60;return Math.round((mins-OP_START)/30);}
 function minsToTime(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
-function breakTime(wh){return wh>=8?60:30;}
+function breakTime(wh){return wh>=4?30:0;}
 function calcEndFromWork(s,wh){const[h,m]=s.split(':').map(Number);return minsToTime(h*60+m+wh*60+breakTime(wh));}
 function buildTimeOptions(sel=''){let o='<option value="">선택</option>';for(let i=0;i<OP_SLOTS;i++){const t=slotToTime(i);o+=`<option value="${t}"${sel===t?' selected':''}>${t}</option>`;}return o;}
+function calcActualWorkHours(h){return h>=4?h-0.5:h;}
 
-// ===== STATE =====
 let staff=[],slots=[],weeklyPrefs={},events={},savedWeeks={},formSubmissions={};
-let staffIdCtr=1;
-let currentWeekThursday=getThisWeekThursday();
-let activeDayIdx=0;
-let weekendQuota=4;
-let holidays=new Set();
-let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
-let quotaUsage={};
-let currentUser=null; // 로그인한 직원 객체
+let staffIdCtr=1,currentWeekThursday=getThisWeekThursday(),activeDayIdx=0;
+let weekendQuota=4,holidays=new Set(),calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+let quotaUsage={},currentUser=null,confirmedWeeks=new Set();
+let requestPeriod={start:null,end:null};
 
-// ===== 비밀번호 해싱 (SHA-256, 간단) =====
-async function hashPw(pw){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+async function hashPw(pw){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+
+function isAdmin(){return currentUser?.isAdmin||false;}
+function isDreamy(){return currentUser?.type==='드리미'&&!isAdmin();}
+function isRegular(){return currentUser?.type==='정규직'&&!isAdmin();}
+function isWeekendOrHoliday(ds){const dow=new Date(ds).getDay();return dow===0||dow===6||holidays.has(ds);}
+function getQuotaUsed(sid,ym){return quotaUsage[`${sid}_${ym}`]||0;}
+function isRequestOpen(){if(!requestPeriod.start||!requestPeriod.end)return false;const now=new Date();return now>=new Date(requestPeriod.start)&&now<=new Date(requestPeriod.end);}
+function isRequestNotYet(){if(!requestPeriod.start)return false;return new Date()<new Date(requestPeriod.start);}
+function isRequestClosed(){if(!requestPeriod.end)return false;return new Date()>new Date(requestPeriod.end);}
+
+function getThisWeekThursday(){const now=new Date();const dow=now.getDay();const diff=dow>=4?-(dow-4):(4-dow);return new Date(now.getFullYear(),now.getMonth(),now.getDate()+diff);}
+function weekDates(thu){return Array.from({length:7},(_,i)=>{const d=new Date(thu);d.setDate(thu.getDate()+i);return d;});}
+function fmtDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function weekLabel(thu){const wed=new Date(thu);wed.setDate(thu.getDate()+6);return `${fmtDate(thu)} (목) ~ ${fmtDate(wed)} (수)`;}
+function weekKey(thu){return fmtDate(thu);}
+function getWeekSlots(){const dates=weekDates(currentWeekThursday).map(fmtDate);return slots.filter(s=>dates.includes(s.date));}
+
+function changeWeek(dir){
+  currentWeekThursday=new Date(currentWeekThursday.getFullYear(),currentWeekThursday.getMonth(),currentWeekThursday.getDate()+dir*7);
+  activeDayIdx=0;updateAllLabels();
+  if(document.getElementById('page-timetable').classList.contains('active'))renderTimetablePage();
+  if(document.getElementById('page-assign').classList.contains('active'))document.getElementById('result-card').style.display='none';
+}
+function updateAllLabels(){
+  const lbl=weekLabel(currentWeekThursday);
+  ['tt-week-label','assign-week-label','export-week-label','form-week-label'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
+}
+
+function recalcQuotaUsage(){
+  quotaUsage={};
+  Object.entries(weeklyPrefs).forEach(([sid,p])=>{
+    (p.offDays||[]).forEach(ds=>{
+      if(isWeekendOrHoliday(ds)){const key=`${sid}_${ds.slice(0,7)}`;quotaUsage[key]=(quotaUsage[key]||0)+1;}
+    });
+  });
 }
 
 // ===== LOGIN =====
@@ -609,7 +675,6 @@ async function doLogin(){
   if(!empno||!pw){errEl.textContent='사번과 비밀번호를 입력해주세요.';return;}
   const{data,error}=await sb.from('staff').select('*').eq('empno',empno).single();
   if(error||!data){errEl.textContent='사번을 찾을 수 없습니다.';return;}
-  // 첫 로그인 (비밀번호 미설정)
   if(!data.password_hash){
     document.getElementById('login-form').style.display='none';
     document.getElementById('first-login-form').style.display='block';
@@ -626,6 +691,7 @@ async function doSetPassword(){
   const pw=document.getElementById('new-pw').value;
   const pw2=document.getElementById('new-pw-confirm').value;
   const errEl=document.getElementById('pw-error');
+  errEl.textContent='';
   if(pw.length<4){errEl.textContent='비밀번호는 4자리 이상이어야 합니다.';return;}
   if(pw!==pw2){errEl.textContent='비밀번호가 일치하지 않습니다.';return;}
   const hash=await hashPw(pw);
@@ -635,11 +701,7 @@ async function doSetPassword(){
 }
 
 function loginSuccess(userData){
-  currentUser={
-    id:userData.id, name:userData.name, empno:userData.empno,
-    type:userData.type, isAdmin:userData.is_admin||false
-  };
-  // 세션 저장
+  currentUser={id:userData.id,name:userData.name,empno:userData.empno,type:userData.type,isAdmin:userData.is_admin||false};
   sessionStorage.setItem('currentUser',JSON.stringify(currentUser));
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
@@ -647,62 +709,8 @@ function loginSuccess(userData){
   dbLoadAll();
 }
 
-function applyUserPermissions(){
-  const admin=isAdmin();
-  const dreamy=isDreamy();
-  const regular=isRegular();
-
-  // 헤더
-  document.getElementById('header-username').textContent=currentUser.name;
-  const badgeText=admin?'관리자':regular?'정규직':'드리미';
-  const badgeClass=admin?'badge-admin':regular?'badge-regular':'badge-dreamy';
-  document.getElementById('header-badge').textContent=badgeText;
-  document.getElementById('header-badge').className='user-badge '+badgeClass;
-
-  // 탭 표시
-  // 드리미: 대시보드, 타임테이블, 스케줄신청만
-  // 정규직: 모든 탭 보기 가능 (편집 권한 없음)
-  // 관리자: 모든 탭 + 편집 권한
-  document.getElementById('tab-staff').style.display  = admin?'':'none';
-  document.getElementById('tab-assign').style.display = admin?'':'none';
-  document.getElementById('tab-admin').style.display  = admin?'':'none';
-  document.getElementById('tab-export').style.display = (admin||regular)?'':'none';
-
-  // 타임테이블 편집 요소 (관리자만)
-  ['btn-add-slot','event-edit-area','drag-hint'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.style.display=admin?'':'none';
-  });
-
-  renderDashboardBtns();
-}
-
-function renderDashboardBtns(){
-  const el=document.getElementById('dashboard-btns');
-  const admin=isAdmin();
-  const dreamy=isDreamy();
-  if(admin){
-    el.innerHTML=`
-      <button class="btn btn-primary" onclick="showTab('staff')">👥 직원 관리</button>
-      <button class="btn btn-secondary" onclick="showTab('timetable')">📅 타임테이블</button>
-      <button class="btn btn-success" onclick="showTab('assign')">⚙️ 자동 편성</button>
-      <button class="btn btn-warning" onclick="showTab('form')">📝 스케줄 신청 현황</button>`;
-  } else if(dreamy){
-    el.innerHTML=`
-      <button class="btn btn-primary" onclick="showTab('form')">📝 스케줄 신청하기</button>
-      <button class="btn btn-secondary" onclick="showTab('timetable')">📅 타임테이블 보기</button>`;
-  } else {
-    // 정규직
-    el.innerHTML=`
-      <button class="btn btn-secondary" onclick="showTab('timetable')">📅 타임테이블 보기</button>
-      <button class="btn btn-secondary" onclick="showTab('form')">📝 스케줄 신청 현황</button>
-      <button class="btn btn-secondary" onclick="showTab('export')">📤 내보내기</button>`;
-  }
-}
-
 function doLogout(){
-  sessionStorage.removeItem('currentUser');
-  currentUser=null;
+  sessionStorage.removeItem('currentUser');currentUser=null;
   document.getElementById('app-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-form').style.display='block';
@@ -712,7 +720,6 @@ function doLogout(){
   document.getElementById('login-error').textContent='';
 }
 
-function openChangePw(){openModal('modal-changepw');}
 async function doChangePw(){
   const cur=document.getElementById('cur-pw').value;
   const nw=document.getElementById('change-new-pw').value;
@@ -724,13 +731,43 @@ async function doChangePw(){
   const curHash=await hashPw(cur);
   const{data}=await sb.from('staff').select('password_hash').eq('id',currentUser.id).single();
   if(data.password_hash!==curHash){errEl.textContent='현재 비밀번호가 틀렸습니다.';return;}
-  const newHash=await hashPw(nw);
-  await sb.from('staff').update({password_hash:newHash}).eq('id',currentUser.id);
-  closeModal('modal-changepw');
-  showToast('✅ 비밀번호가 변경됐습니다!');
+  await sb.from('staff').update({password_hash:await hashPw(nw)}).eq('id',currentUser.id);
+  closeModal('modal-changepw');showToast('✅ 비밀번호가 변경됐습니다!');
 }
 
-// ===== DB 연동 =====
+function applyUserPermissions(){
+  const admin=isAdmin(),dreamy=isDreamy(),regular=isRegular();
+  document.getElementById('header-username').textContent=currentUser.name;
+  const badgeText=admin?'관리자':regular?'정규직':'드리미';
+  const badgeClass=admin?'badge-admin':regular?'badge-regular':'badge-dreamy';
+  document.getElementById('header-badge').textContent=badgeText;
+  document.getElementById('header-badge').className='user-badge '+badgeClass;
+  document.getElementById('tab-staff').style.display=admin?'':'none';
+  document.getElementById('tab-assign').style.display=admin?'':'none';
+  document.getElementById('tab-admin').style.display=admin?'':'none';
+  document.getElementById('tab-export').style.display=(admin||regular)?'':'none';
+  ['btn-add-slot','event-edit-area','drag-hint'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=admin?'':'none';});
+  renderDashboardBtns();
+}
+
+function renderDashboardBtns(){
+  const el=document.getElementById('dashboard-btns');
+  if(isAdmin()){
+    el.innerHTML=`<button class="btn btn-primary" onclick="showTab('staff')">👥 직원 관리</button>
+      <button class="btn btn-secondary" onclick="showTab('timetable')">📅 타임테이블</button>
+      <button class="btn btn-success" onclick="showTab('assign')">⚙️ 자동 편성</button>
+      <button class="btn btn-warning" onclick="showTab('form')">📝 스케줄 신청 현황</button>`;
+  } else if(isDreamy()){
+    el.innerHTML=`<button class="btn btn-primary" onclick="showTab('form')">📝 스케줄 신청하기</button>
+      <button class="btn btn-secondary" onclick="showTab('timetable')">📅 타임테이블 보기</button>`;
+  } else {
+    el.innerHTML=`<button class="btn btn-secondary" onclick="showTab('timetable')">📅 타임테이블 보기</button>
+      <button class="btn btn-secondary" onclick="showTab('form')">📝 스케줄 신청 현황</button>
+      <button class="btn btn-secondary" onclick="showTab('export')">📤 내보내기</button>`;
+  }
+}
+
+// ===== DB =====
 async function dbLoadAll(){
   showToast('📡 데이터 불러오는 중...');
   try{
@@ -752,18 +789,13 @@ async function dbLoadAll(){
     });
     holidays=new Set((holidayRes.data||[]).map(h=>h.date));
     (settingRes.data||[]).forEach(s=>{
-      if(s.key==='weekend_quota') weekendQuota=parseInt(s.value)||4;
-      if(s.key==='request_period'){
-        try{
-          const p=JSON.parse(s.value);
-          if(p && p.start) requestPeriod=p;
-        }catch(e){}
-      }
+      if(s.key==='weekend_quota')weekendQuota=parseInt(s.value)||4;
+      if(s.key==='request_period'){try{const p=JSON.parse(s.value);if(p&&p.start)requestPeriod=p;}catch(e){}}
+      if(s.key.startsWith('confirmed_'))confirmedWeeks.add(s.key.replace('confirmed_',''));
     });
     events={};(eventRes.data||[]).forEach(e=>{events[e.date]=e.content;});
-    // 확정 주차 목록 로드
-    const confirmedRes=await sb.from('settings').select('*').like('key','confirmed_%');
-    confirmedWeeks=new Set((confirmedRes.data||[]).map(s=>s.key.replace('confirmed_','')));
+    recalcQuotaUsage();
+    updateAllLabels();updateDashboard();renderStaffTable();
     if(document.getElementById('admin-quota'))document.getElementById('admin-quota').value=weekendQuota;
     showToast('✅ 데이터 로드 완료!');
   }catch(err){showToast('❌ 로드 실패: '+err.message);}
@@ -808,50 +840,6 @@ async function dbSaveAssignments(weekStart){
   if(rows.length){const{error}=await sb.from('assignments').insert(rows);if(error)throw error;}
 }
 
-// ===== WEEK =====
-function getThisWeekThursday(){const now=new Date();const dow=now.getDay();const diff=dow>=4?-(dow-4):(4-dow);return new Date(now.getFullYear(),now.getMonth(),now.getDate()+diff);}
-function weekDates(thu){return Array.from({length:7},(_,i)=>{const d=new Date(thu);d.setDate(thu.getDate()+i);return d;});}
-function fmtDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function weekLabel(thu){const wed=new Date(thu);wed.setDate(thu.getDate()+6);return `${fmtDate(thu)} (목) ~ ${fmtDate(wed)} (수)`;}
-function weekKey(thu){return fmtDate(thu);}
-function changeWeek(dir){
-  currentWeekThursday=new Date(currentWeekThursday.getFullYear(),currentWeekThursday.getMonth(),currentWeekThursday.getDate()+dir*7);
-  activeDayIdx=0;updateAllLabels();
-  if(document.getElementById('page-timetable').classList.contains('active'))renderTimetablePage();
-  if(document.getElementById('page-assign').classList.contains('active'))document.getElementById('result-card').style.display='none';
-}
-function updateAllLabels(){
-  const lbl=weekLabel(currentWeekThursday);
-  ['tt-week-label','assign-week-label','export-week-label','form-week-label'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
-  const wwl=document.getElementById('weekly-week-label');if(wwl)wwl.textContent=lbl;
-}
-function getWeekSlots(){const dates=weekDates(currentWeekThursday).map(fmtDate);return slots.filter(s=>dates.includes(s.date));}
-
-// 주말 포함 공휴일 여부 (토·일은 자동 처리)
-function isWeekendOrHoliday(ds){
-  const dow=new Date(ds).getDay();
-  return dow===0||dow===6||holidays.has(ds);
-}
-
-// 달력에서 관리자가 등록하는 공휴일은 평일만 (토·일 클릭 무시)
-async function toggleHoliday(ds){
-  const dow=new Date(ds).getDay();
-  if(dow===0||dow===6){
-    showToast('토·일요일은 자동으로 주말 처리됩니다.');return;
-  }
-  if(holidays.has(ds))holidays.delete(ds);else holidays.add(ds);
-  try{await dbSaveHolidays();recalcQuotaUsage();renderCalendar();renderQuotaStatus();}
-  catch(err){alert('저장 실패: '+err.message);}
-}
-function recalcQuotaUsage(){
-  quotaUsage={};
-  Object.entries(weeklyPrefs).forEach(([sid,p])=>{
-    (p.offDays||[]).forEach(ds=>{
-      if(isWeekendOrHoliday(ds)){const key=`${sid}_${ds.slice(0,7)}`;quotaUsage[key]=(quotaUsage[key]||0)+1;}
-    });
-  });
-}
-
 // ===== TABS =====
 function showTab(id){
   const ids=['dashboard','staff','timetable','assign','form','admin','export'];
@@ -862,18 +850,10 @@ function showTab(id){
   if(id==='dashboard')updateDashboard();
   if(id==='staff')renderStaffTable();
   if(id==='timetable'){activeDayIdx=0;renderTimetablePage();}
-  if(id==='export'){}
-  if(id==='admin'){
-    renderCalendar();renderQuotaStatus();initAdminMonthSelect();
-    // 신청 기한 UI 복원
-    if(requestPeriod.start) document.getElementById('request-start').value=requestPeriod.start;
-    if(requestPeriod.end)   document.getElementById('request-end').value=requestPeriod.end;
-    renderRequestPeriodStatus();
-  }
   if(id==='form')renderFormPage();
+  if(id==='admin'){renderCalendar();renderQuotaStatus();initAdminMonthSelect();initStatMonthSelect();renderMonthlyStats();if(requestPeriod.start)document.getElementById('request-start').value=requestPeriod.start;if(requestPeriod.end)document.getElementById('request-end').value=requestPeriod.end;renderRequestPeriodStatus();}
 }
 
-// ===== DASHBOARD =====
 function updateDashboard(){
   document.getElementById('stat-staff').textContent=staff.length;
   const wSlots=getWeekSlots();
@@ -882,70 +862,53 @@ function updateDashboard(){
   document.getElementById('stat-weeks').textContent=Object.keys(savedWeeks).length;
   const key=weekKey(currentWeekThursday);
   const isConfirmed=confirmedWeeks.has(key);
-  const confirmBadge=isConfirmed
-    ?'<span class="tag tag-green" style="font-size:13px;padding:4px 12px;">✅ 확정됨</span>'
-    :'<span class="tag tag-orange" style="font-size:13px;padding:4px 12px;">⏳ 미확정</span>';
-  document.getElementById('dashboard-week').innerHTML=`📅 ${weekLabel(currentWeekThursday)} &nbsp; ${confirmBadge}`;
+  const badge=isConfirmed?'<span class="tag tag-green">✅ 확정됨</span>':'<span class="tag tag-orange">⏳ 미확정</span>';
+  document.getElementById('dashboard-week').innerHTML=`📅 ${weekLabel(currentWeekThursday)} &nbsp; ${badge}`;
 }
 
 // ===== FORM PAGE =====
 function renderFormPage(){
   document.getElementById('form-week-label').textContent=weekLabel(currentWeekThursday);
-  const isAdmin=currentUser?.isAdmin||false;
   const el=document.getElementById('form-content');
-
-  if(isAdmin){
-    // 관리자: 전체 제출 현황
-    const total=staff.filter(s=>s.type==='드리미').length;
-    const done=Object.keys(formSubmissions).length;
-    document.getElementById('form-submit-count').textContent=`제출 현황: ${done}/${total}명`;
-    let html=`<div class="alert alert-info">드리미 직원들의 이번 주 스케줄 신청 현황입니다.</div>`;
-    // 선착순 정렬 (submitted_at 기준)
-    const sortedSubmissions = Object.entries(formSubmissions)
-      .sort(([,a],[,b]) => new Date(a.submittedAt||0) - new Date(b.submittedAt||0));
-
-    if(!sortedSubmissions.length){html+='<div class="alert alert-warning">아직 제출된 신청이 없습니다.</div>';}
-    else{
-      html+=`<table><thead><tr><th>순번</th><th>이름</th><th>희망근무일수</th><th>근무불가일</th><th>주말·공휴일</th><th>기타</th><th>제출시각</th></tr></thead><tbody>`;
-      sortedSubmissions.forEach(([sid,sub], idx)=>{
-        const s=staff.find(x=>x.id==sid);
-        const ym=fmtDate(currentWeekThursday).slice(0,7);
-        const used=getQuotaUsed(sid,ym);
-        const offDays=Object.entries(sub.dayTimes||{}).filter(([,v])=>v.off).map(([k])=>k.slice(5)).join(', ')||'-';
-        const badge=used>=weekendQuota?'quota-over':used>0?'quota-warn':'quota-ok';
-        html+=`<tr>
-          <td style="text-align:center;font-weight:700;color:#1e3a5f;">${idx+1}</td>
-          <td><strong>${s?.name||'-'}</strong></td>
-          <td>${sub.wishDays?`주 ${sub.wishDays}일`:'-'}</td>
-          <td style="font-size:11px;color:#991b1b;">${offDays}</td>
-          <td><span class="quota-badge ${badge}">${used}/${weekendQuota}회</span></td>
-          <td style="font-size:11px;color:#888;">${sub.etc||'-'}</td>
-          <td style="font-size:11px;color:#888;">${sub.submittedAt?new Date(sub.submittedAt).toLocaleString('ko-KR'):'-'}</td></tr>`;
-      });
-      html+='</tbody></table>';
-    }
-    el.innerHTML=html;
-  } else {
-    // 드리미: 본인 신청 폼
+  if(isAdmin()){
+    const dreamy=staff.filter(s=>s.type==='드리미');
+    document.getElementById('form-submit-count').textContent=`제출 현황: ${Object.keys(formSubmissions).length}/${dreamy.length}명`;
+    const sorted=Object.entries(formSubmissions).sort(([,a],[,b])=>new Date(a.submittedAt||0)-new Date(b.submittedAt||0));
+    if(!sorted.length){el.innerHTML='<div class="alert alert-warning">아직 제출된 신청이 없습니다.</div>';return;}
+    let html=`<table><thead><tr><th>순번</th><th>이름</th><th>희망근무일수</th><th>근무불가일</th><th>주말·공휴일</th><th>기타</th><th>제출시각</th></tr></thead><tbody>`;
+    sorted.forEach(([sid,sub],idx)=>{
+      const s=staff.find(x=>x.id==sid);
+      const ym=fmtDate(currentWeekThursday).slice(0,7);
+      const used=getQuotaUsed(sid,ym);
+      const offDays=Object.entries(sub.dayTimes||{}).filter(([,v])=>v.off).map(([k])=>k.slice(5)).join(', ')||'-';
+      html+=`<tr><td style="text-align:center;font-weight:700;color:#1e3a5f;">${idx+1}</td>
+        <td><strong>${s?.name||'-'}</strong></td>
+        <td>${sub.wishDays?`주 ${sub.wishDays}일`:'-'}</td>
+        <td style="font-size:11px;color:#991b1b;">${offDays}</td>
+        <td><span class="quota-badge ${used>=weekendQuota?'quota-over':used>0?'quota-warn':'quota-ok'}">${used}/${weekendQuota}회</span></td>
+        <td style="font-size:11px;color:#888;">${sub.etc||'-'}</td>
+        <td style="font-size:11px;color:#888;">${sub.submittedAt?new Date(sub.submittedAt).toLocaleString('ko-KR'):'-'}</td></tr>`;
+    });
+    el.innerHTML=html+'</tbody></table>';
+  } else if(isDreamy()){
     document.getElementById('form-submit-count').textContent='';
+    if(requestPeriod.start&&requestPeriod.end){
+      if(isRequestNotYet()){el.innerHTML=`<div class="alert alert-warning" style="text-align:center;padding:24px;"><div style="font-size:28px;margin-bottom:10px;">⏳</div><div style="font-size:14px;font-weight:700;margin-bottom:6px;">아직 신청 기간이 아닙니다</div><div style="font-size:12px;color:#92400e;">신청 시작: <strong>${requestPeriod.start.replace('T',' ')}</strong></div></div>`;return;}
+      if(isRequestClosed()){el.innerHTML=`<div class="alert alert-warning" style="text-align:center;padding:24px;"><div style="font-size:28px;margin-bottom:10px;">🔒</div><div style="font-size:14px;font-weight:700;margin-bottom:6px;">스케줄 신청이 마감됐습니다</div><div style="font-size:12px;color:#92400e;">마감: <strong>${requestPeriod.end.replace('T',' ')}</strong></div></div>`;return;}
+    }
     const sid=currentUser.id;
     const sub=formSubmissions[sid];
     const ym=fmtDate(currentWeekThursday).slice(0,7);
     const used=getQuotaUsed(sid,ym);
-    const remain=Math.max(0,weekendQuota-used);
-
     let html=`<div class="alert alert-info">이번 주 근무 가능 시간과 희망 사항을 입력해 주세요.</div>
     <div style="background:#f8fafc;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
       <span style="font-size:12px;font-weight:600;">🚫 주말·공휴일 휴무 신청</span>
       <span class="quota-badge ${used>=weekendQuota?'quota-over':used>0?'quota-warn':'quota-ok'}">${used}/${weekendQuota}회 사용</span>
-      <span style="font-size:12px;color:#555;">잔여 ${remain}회</span>
+      <span style="font-size:12px;color:#555;">잔여 ${Math.max(0,weekendQuota-used)}회</span>
     </div>
     <div style="display:grid;gap:8px;margin-bottom:14px;" id="form-day-times-dreamy">`;
-
     weekDates(currentWeekThursday).forEach((d,i)=>{
-      const ds=fmtDate(d);
-      const isWH=isWeekendOrHoliday(ds);
-      const saved=(sub?.dayTimes||{})[ds]||{};
+      const ds=fmtDate(d);const isWH=isWeekendOrHoliday(ds);const saved=(sub?.dayTimes||{})[ds]||{};
       html+=`<div style="display:grid;grid-template-columns:90px 1fr 16px 1fr 80px;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;border:1px solid ${isWH?'#fca5a5':'#e2e8f0'};background:${isWH?'#fff5f5':'#f8fafc'};">
         <div style="font-weight:700;font-size:12px;">${DAYS_KO[d.getDay()]} <span style="color:#888;font-weight:400;">${ds.slice(5)}</span>${isWH?`<span class="tag tag-red" style="margin-left:4px;font-size:9px;">${holidays.has(ds)?'공휴일':'주말'}</span>`:''}</div>
         <select id="fds-${i}" style="font-size:12px;" ${saved.off?'disabled':''}>${buildTimeOptions(saved.start||'')}</select>
@@ -955,7 +918,6 @@ function renderFormPage(){
           <input type="checkbox" id="fdo-${i}" style="width:auto;margin:0;" ${saved.off?'checked':''} onchange="toggleDayOff(${i})"> 근무불가</label>
       </div>`;
     });
-
     html+=`</div>
     <div class="grid2" style="margin-bottom:14px;">
       <div><label>희망 근무일수</label>
@@ -966,14 +928,22 @@ function renderFormPage(){
           <option value="5" ${sub?.wishDays==5?'selected':''}>주 5일</option>
         </select>
       </div>
-      <div><label>기타 (면담요청·장기여행 등)</label>
-        <input id="form-etc-dreamy" placeholder="특이사항" value="${sub?.etc||''}">
-      </div>
+      <div><label>기타 (면담요청·장기여행 등)</label><input id="form-etc-dreamy" placeholder="특이사항" value="${sub?.etc||''}"></div>
     </div>
-    <button class="btn btn-success" onclick="submitDreamyForm()" style="width:100%;padding:10px;font-size:13px;">
-      ${sub?'✏️ 수정 제출':'✅ 스케줄 신청 제출'}
-    </button>`;
+    <button class="btn btn-success" onclick="submitDreamyForm()" style="width:100%;padding:10px;font-size:13px;">${sub?'✏️ 수정 제출':'✅ 스케줄 신청 제출'}</button>`;
     el.innerHTML=html;
+  } else {
+    // 정규직
+    document.getElementById('form-submit-count').textContent='';
+    const sorted=Object.entries(formSubmissions).sort(([,a],[,b])=>new Date(a.submittedAt||0)-new Date(b.submittedAt||0));
+    if(!sorted.length){el.innerHTML='<div class="alert alert-info">아직 제출된 신청이 없습니다.</div>';return;}
+    let html=`<table><thead><tr><th>순번</th><th>이름</th><th>희망근무일수</th><th>근무불가일</th><th>기타</th><th>제출시각</th></tr></thead><tbody>`;
+    sorted.forEach(([sid,sub],idx)=>{
+      const s=staff.find(x=>x.id==sid);
+      const offDays=Object.entries(sub.dayTimes||{}).filter(([,v])=>v.off).map(([k])=>k.slice(5)).join(', ')||'-';
+      html+=`<tr><td style="text-align:center;font-weight:700;">${idx+1}</td><td><strong>${s?.name||'-'}</strong></td><td>${sub.wishDays?`주 ${sub.wishDays}일`:'-'}</td><td style="font-size:11px;color:#991b1b;">${offDays}</td><td style="font-size:11px;color:#888;">${sub.etc||'-'}</td><td style="font-size:11px;color:#888;">${sub.submittedAt?new Date(sub.submittedAt).toLocaleString('ko-KR'):'-'}</td></tr>`;
+    });
+    el.innerHTML=html+'</tbody></table>';
   }
 }
 
@@ -997,11 +967,8 @@ async function submitDreamyForm(){
     await dbSaveRequest(sid,fmtDate(currentWeekThursday),wishDays,dayTimes,etc);
     formSubmissions[sid]={staffId:sid,wishDays,etc,dayTimes,submittedAt:new Date().toISOString()};
     const offDays=Object.entries(dayTimes).filter(([,v])=>v.off).map(([k])=>k);
-    const preferTimes=Object.entries(dayTimes).filter(([,v])=>!v.off&&v.start).map(([k])=>k);
-    weeklyPrefs[sid]={offDays,preferTimes,dayTimes,wishDays,etc};
-    recalcQuotaUsage();
-    showToast('✅ 스케줄 신청이 제출됐습니다!');
-    renderFormPage();
+    weeklyPrefs[sid]={offDays,preferTimes:Object.entries(dayTimes).filter(([,v])=>!v.off&&v.start).map(([k])=>k),dayTimes,wishDays,etc};
+    recalcQuotaUsage();showToast('✅ 스케줄 신청이 제출됐습니다!');renderFormPage();
   }catch(err){alert('제출 실패: '+err.message);}
 }
 
@@ -1011,31 +978,18 @@ function renderTimetablePage(){
   const admin=isAdmin();
   const key=weekKey(currentWeekThursday);
   const isConfirmed=confirmedWeeks.has(key);
-
-  // 드리미만 미확정 차단 (정규직·관리자는 항상 열람 가능)
-  if(isDreamy() && !isConfirmed){
+  if(isDreamy()&&!isConfirmed){
     document.getElementById('event-banner-area').innerHTML='';
-    document.getElementById('tt-container').innerHTML=`
-      <div class="alert alert-warning" style="text-align:center;padding:30px;">
-        <div style="font-size:32px;margin-bottom:12px;">🔒</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px;">아직 확정되지 않은 주차입니다</div>
-        <div style="font-size:13px;color:#92400e;">관리자가 스케줄 편성을 완료하면 여기서 확인할 수 있어요.</div>
-      </div>`;
+    document.getElementById('tt-container').innerHTML=`<div class="alert alert-warning" style="text-align:center;padding:30px;"><div style="font-size:32px;margin-bottom:12px;">🔒</div><div style="font-size:15px;font-weight:700;margin-bottom:8px;">아직 확정되지 않은 주차입니다</div><div style="font-size:13px;color:#92400e;">관리자가 스케줄 편성을 완료하면 여기서 확인할 수 있어요.</div></div>`;
     return;
   }
-
-  if(activeDayIdx===7){
-    document.getElementById('event-banner-area').innerHTML='';
-    if(document.getElementById('event-input'))document.getElementById('event-input').value='';
-    document.getElementById('tt-container').innerHTML=renderWeeklySummary();return;
-  }
+  if(activeDayIdx===7){document.getElementById('event-banner-area').innerHTML='';const ei=document.getElementById('event-input');if(ei)ei.value='';document.getElementById('tt-container').innerHTML=renderWeeklySummary();return;}
   const date=fmtDate(weekDates(currentWeekThursday)[activeDayIdx]);
   const evText=events[date]||'';
-  const einput=document.getElementById('event-input');if(einput)einput.value=evText;
+  const ei=document.getElementById('event-input');if(ei)ei.value=evText;
   document.getElementById('event-banner-area').innerHTML=evText?`<div class="event-banner">📢 ${evText}</div>`:'';
-  const daySlots=slots.filter(s=>s.date===date);
   document.getElementById('tt-container').innerHTML='';
-  document.getElementById('tt-container').appendChild(buildTTTable(date,daySlots,admin));
+  document.getElementById('tt-container').appendChild(buildTTTable(date,slots.filter(s=>s.date===date),admin));
 }
 
 function buildDayTabs(cid,activeIdx,onClick){
@@ -1044,22 +998,19 @@ function buildDayTabs(cid,activeIdx,onClick){
   dates.forEach((d,i)=>{
     const btn=document.createElement('button');
     btn.className='btn '+(i===activeIdx?'btn-primary':'btn-secondary');
-    btn.style.fontSize='12px';
-    btn.textContent=`${DAYS_KO[d.getDay()]} ${fmtDate(d).slice(5)}`;
+    btn.style.fontSize='12px';btn.textContent=`${DAYS_KO[d.getDay()]} ${fmtDate(d).slice(5)}`;
     btn.onclick=()=>onClick(i);bar.appendChild(btn);
   });
   const sb2=document.createElement('button');
   sb2.className='btn '+(activeIdx===7?'btn-success':'btn-secondary');
-  sb2.style.fontSize='12px';sb2.textContent='📊 주간 요약';
-  sb2.onclick=()=>onClick(7);bar.appendChild(sb2);
+  sb2.style.fontSize='12px';sb2.textContent='📊 주간 요약';sb2.onclick=()=>onClick(7);bar.appendChild(sb2);
 }
 
 // ===== DRAG =====
 let dragState=null,dragPreview=null;
 function getCellWidth(){const c=document.querySelector('.tt-cell');return c?c.getBoundingClientRect().width:22;}
 function onCellMousedown(e,slotIdx,cellIdx,role){
-  if(!currentUser?.isAdmin)return;
-  e.preventDefault();
+  if(!isAdmin())return;e.preventDefault();
   const slot=slots[slotIdx];if(!slot)return;
   dragState={type:role,slotIdx,startX:e.clientX,origStart:timeToSlot(slot.start),origEnd:timeToSlot(slot.end),cellW:getCellWidth()};
   dragPreview=document.createElement('div');dragPreview.className='drag-preview';document.body.appendChild(dragPreview);
@@ -1093,8 +1044,7 @@ async function onDragEnd(){
   dragState=null;renderTimetablePage();
 }
 async function onCellClick(e,slotIdx,cellIdx){
-  if(!currentUser?.isAdmin)return;
-  if(dragState)return;
+  if(!isAdmin()||dragState)return;
   const slot=slots[slotIdx];if(!slot)return;
   const s=timeToSlot(slot.start),en=timeToSlot(slot.end);
   const isOn=cellIdx>=s&&cellIdx<en;
@@ -1106,7 +1056,6 @@ async function onCellClick(e,slotIdx,cellIdx){
   renderTimetablePage();
 }
 
-// ===== BUILD TT TABLE =====
 function buildTTTable(date,daySlots,editable=false){
   const groups={};GROUP_ORDER.forEach(g=>groups[g]=[]);
   daySlots.forEach(s=>{const g=POS_GROUP[s.position]||'welcome';if(groups[g])groups[g].push(s);});
@@ -1135,8 +1084,7 @@ function buildTTTable(date,daySlots,editable=false){
   const totalRow=new Array(OP_SLOTS).fill(0);
   GROUP_ORDER.forEach(grp=>{
     const gSlots=groups[grp];if(!gSlots.length)return;
-    const clr=GRP_COLOR[grp];
-    const subtotal=new Array(OP_SLOTS).fill(0);
+    const clr=GRP_COLOR[grp];const subtotal=new Array(OP_SLOTS).fill(0);
     const htr=document.createElement('tr');
     const htd=document.createElement('td');htd.colSpan=5+OP_SLOTS+2;htd.className=`tt-pos-header ph-${clr}`;htd.textContent='▶ '+POS_LABEL[grp];
     htr.appendChild(htd);tbody.appendChild(htr);
@@ -1144,11 +1092,9 @@ function buildTTTable(date,daySlots,editable=false){
       const slotIdx=slots.indexOf(slot);
       const ss=timeToSlot(slot.start),se=timeToSlot(slot.end);
       const wh=slot.workHours||0,brk=breakTime(wh);
-      const names=slot.assigned||[];
-      const rowCount=Math.max(slot.count||1,1);
+      const names=slot.assigned||[];const rowCount=Math.max(slot.count||1,1);
       for(let p=0;p<rowCount;p++){
-        const name=names[p]||'',isFirst=(p===0);
-        const tr=document.createElement('tr');
+        const name=names[p]||'',isFirst=(p===0);const tr=document.createElement('tr');
         if(isFirst){
           const tdNo=document.createElement('td');tdNo.className='tt-staff-no';tdNo.rowSpan=rowCount;tdNo.textContent=rowIdx+1;tr.appendChild(tdNo);
           const tdName=document.createElement('td');tdName.className='tt-staff-name';tdName.rowSpan=rowCount;
@@ -1181,8 +1127,8 @@ function buildTTTable(date,daySlots,editable=false){
     });
     const subTr=document.createElement('tr');
     const subLabel=document.createElement('td');subLabel.colSpan=5;subLabel.className='tt-subtotal';subLabel.style.cssText='text-align:right;padding-right:8px;';subLabel.textContent='소계';subTr.appendChild(subLabel);
-    subtotal.forEach((v,i)=>{totalRow[i]+=v;const td=document.createElement('td');td.className='tt-subtotal';td.textContent=v||'';subTr.appendChild(td);});
     const subWH=gSlots.reduce((a,s)=>a+(s.workHours||0),0);
+    subtotal.forEach((v,i)=>{totalRow[i]+=v;const td=document.createElement('td');td.className='tt-subtotal';td.textContent=v||'';subTr.appendChild(td);});
     const subWHtd=document.createElement('td');subWHtd.colSpan=2;subWHtd.className='tt-subtotal';subWHtd.textContent=subWH.toFixed(1)+'h';subTr.appendChild(subWHtd);
     tbody.appendChild(subTr);
   });
@@ -1205,7 +1151,6 @@ function buildTTTable(date,daySlots,editable=false){
   tbl.appendChild(tbody);wrap.appendChild(tbl);return wrap;
 }
 
-// ===== WEEKLY SUMMARY =====
 function renderWeeklySummary(){
   const wSlots=getWeekSlots().filter(s=>s.position!=='직원');
   const dates=weekDates(currentWeekThursday);
@@ -1214,34 +1159,33 @@ function renderWeeklySummary(){
   const dreamyMap={};
   dreamyStaff.forEach(s=>dreamyMap[s.name]={name:s.name,days:0,workHours:0,slots:[]});
   wSlots.forEach(sl=>(sl.assigned||[]).forEach(n=>{if(dreamyMap[n])dreamyMap[n].slots.push(sl);}));
-  Object.values(dreamyMap).forEach(sm=>{sm.days=[...new Set(sm.slots.map(s=>s.date))].length;sm.workHours=sm.slots.reduce((a,sl)=>a+(sl.workHours||0),0);});
+  Object.values(dreamyMap).forEach(sm=>{sm.days=[...new Set(sm.slots.map(s=>s.date))].length;sm.workHours=sm.slots.reduce((a,sl)=>a+calcActualWorkHours(sl.workHours||0),0);});
   const staffSlots=getWeekSlots().filter(s=>s.position==='직원');
   const regularMap={};
   regularStaff.forEach(s=>regularMap[s.name]={name:s.name,days:0,workHours:0});
-  staffSlots.forEach(sl=>(sl.assigned||[]).forEach(n=>{if(regularMap[n]){regularMap[n].days++;regularMap[n].workHours+=(sl.workHours||0);}}));
+  staffSlots.forEach(sl=>(sl.assigned||[]).forEach(n=>{if(regularMap[n]){regularMap[n].days++;regularMap[n].workHours+=calcActualWorkHours(sl.workHours||0);}}));
   const dreamyWorking=Object.values(dreamyMap).filter(s=>s.days>0).length;
   const totalDreamyWH=Object.values(dreamyMap).reduce((a,s)=>a+s.workHours,0);
   const unfilledCount=wSlots.filter(s=>(s.assigned||[]).length<1).length;
   const dayStats=dates.map(d=>{
-    const ds=fmtDate(d);
-    const ds_slots=wSlots.filter(s=>s.date===ds);
+    const ds=fmtDate(d);const ds_slots=wSlots.filter(s=>s.date===ds);
     const workers=[...new Set(ds_slots.flatMap(s=>s.assigned||[]).filter(n=>dreamyMap[n]))];
-    const wh=ds_slots.reduce((a,s)=>a+(s.workHours||0)*(s.assigned||[]).filter(n=>dreamyMap[n]).length,0);
+    const wh=ds_slots.reduce((a,s)=>a+calcActualWorkHours(s.workHours||0)*(s.assigned||[]).filter(n=>dreamyMap[n]).length,0);
     return{date:ds,day:DAYS_KO[d.getDay()],count:workers.length,wh,isWH:isWeekendOrHoliday(ds)};
   });
   let html=`<div class="grid4" style="margin-bottom:16px;">
     <div class="summary-stat"><div class="snum">${dreamyWorking}</div><div class="slbl">출근 드리미 수</div></div>
-    <div class="summary-stat"><div class="snum">${totalDreamyWH.toFixed(1)}h</div><div class="slbl">드리미 총 근무시간</div></div>
+    <div class="summary-stat"><div class="snum">${totalDreamyWH.toFixed(1)}h</div><div class="slbl">드리미 총 실근무시간</div></div>
     <div class="summary-stat"><div class="snum">${Object.values(dreamyMap).reduce((a,s)=>a+s.days,0)}</div><div class="slbl">드리미 총 근무 인원·일</div></div>
     <div class="summary-stat"><div class="snum">${unfilledCount}</div><div class="slbl">미배정 슬롯</div></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
     <div><div style="font-weight:700;color:#1e3a5f;font-size:13px;margin-bottom:8px;">📅 요일별 드리미 투입 현황</div>
-    <table class="week-summary-table"><thead><tr><th>요일</th><th>날짜</th><th>드리미 인원</th><th>근무시간</th></tr></thead><tbody>`;
+    <table class="week-summary-table"><thead><tr><th>요일</th><th>날짜</th><th>드리미 인원</th><th>실근무시간</th></tr></thead><tbody>`;
   dayStats.forEach(d=>html+=`<tr><td><strong>${d.day}</strong></td><td>${d.isWH?'<span class="tag tag-red" style="font-size:9px;margin-right:3px;">주말</span>':''}${d.date.slice(5)}</td><td>${d.count}명</td><td>${d.wh.toFixed(1)}h</td></tr>`);
   html+=`</tbody></table></div>
     <div><div style="font-weight:700;color:#1e3a5f;font-size:13px;margin-bottom:8px;">🟡 드리미 직원별 현황</div>
-    <table class="week-summary-table"><thead><tr><th>이름</th><th>근무일</th><th>근무시간</th><th>상태</th></tr></thead><tbody>`;
+    <table class="week-summary-table"><thead><tr><th>이름</th><th>근무일</th><th>실근무시간</th><th>상태</th></tr></thead><tbody>`;
   Object.values(dreamyMap).filter(s=>s.days>0).sort((a,b)=>b.workHours-a.workHours).forEach(s=>{
     const ok=s.days>=3&&s.days<=5;
     html+=`<tr><td><strong>${s.name}</strong></td><td>${s.days}일</td><td>${s.workHours.toFixed(1)}h</td>
@@ -1249,7 +1193,7 @@ function renderWeeklySummary(){
   });
   html+=`</tbody></table></div></div>
   <div><div style="font-weight:700;color:#374151;font-size:13px;margin-bottom:8px;">🔵 정규직 현황 <span style="font-size:11px;font-weight:400;color:#888;">(참고용)</span></div>
-  <table class="week-summary-table"><thead><tr><th>이름</th><th>근무일</th><th>근무시간</th></tr></thead><tbody>`;
+  <table class="week-summary-table"><thead><tr><th>이름</th><th>근무일</th><th>실근무시간</th></tr></thead><tbody>`;
   const rw=Object.values(regularMap).filter(s=>s.days>0);
   if(rw.length)rw.forEach(s=>html+=`<tr><td><strong>${s.name}</strong></td><td>${s.days}일</td><td>${s.workHours.toFixed(1)}h</td></tr>`);
   else html+=`<tr><td colspan="3" style="color:#aaa;text-align:center;">수기 입력된 정규직 근무 없음</td></tr>`;
@@ -1257,7 +1201,6 @@ function renderWeeklySummary(){
   return html;
 }
 
-// ===== EVENT =====
 async function saveEventInfo(){
   const date=fmtDate(weekDates(currentWeekThursday)[activeDayIdx]);
   const content=document.getElementById('event-input').value.trim();
@@ -1269,7 +1212,6 @@ async function clearEventInfo(){
   document.getElementById('event-input').value='';renderTimetablePage();
 }
 
-// ===== SLOT MODAL =====
 function calcEndTime(){
   const start=document.getElementById('slot-start').value;
   const wh=parseFloat(document.getElementById('slot-workhours').value);
@@ -1281,8 +1223,9 @@ function calcEndTime(){
     <div><span style="color:#888;">근무</span> <strong>${wh.toFixed(1)}h</strong></div><div style="color:#aaa;">+</div>
     <div><span style="color:#888;">휴게</span> <strong style="color:#92400e;">${brk}분</strong></div><div style="color:#aaa;">=</div>
     <div><span style="color:#888;">퇴근</span> <strong style="color:#166534;font-size:14px;">${endStr}</strong></div>
-  </div><div style="font-size:10px;color:#aaa;margin-top:5px;">${wh>=8?'근무 8h 이상 → 휴게 1시간':'근무 8h 미만 → 휴게 30분'}</div>`;
+  </div><div style="font-size:10px;color:#aaa;margin-top:5px;">${wh>=4?'근무 4h 이상 → 휴게 30분':'근무 4h 미만 → 휴게 없음'}</div>`;
 }
+
 function buildSlotDateSelect(){
   const sel=document.getElementById('slot-date');sel.innerHTML='';
   weekDates(currentWeekThursday).forEach((d,i)=>{
@@ -1300,8 +1243,7 @@ function openSlotModal(){
   calcEndTime();openModal('modal-slot');
 }
 function editSlotModal(idx){
-  buildSlotDateSelect();
-  const s=slots[idx];
+  buildSlotDateSelect();const s=slots[idx];
   document.getElementById('modal-slot-title').textContent='슬롯 수정';
   document.getElementById('edit-slot-idx').value=idx;
   document.getElementById('slot-date').value=s.date;
@@ -1321,7 +1263,7 @@ async function saveSlot(){
   const obj={date,start,end,workHours:wh,position,count:1,assigned:[]};
   try{
     if(editIdx!==''){Object.assign(slots[editIdx],obj);await dbSaveSlot(slots[editIdx]);closeModal('modal-slot');}
-    else{const newSlot={id:null,...obj};await dbSaveSlot(newSlot);slots.push(newSlot);document.getElementById('slot-start').value='09:00';document.getElementById('slot-workhours').value='6.0';calcEndTime();showToast(`✅ ${position} ${start} 슬롯 저장!`);}
+    else{const ns={id:null,...obj};await dbSaveSlot(ns);slots.push(ns);document.getElementById('slot-start').value='09:00';document.getElementById('slot-workhours').value='6.0';calcEndTime();showToast(`✅ ${position} ${start} 슬롯 저장!`);}
     renderTimetablePage();
   }catch(err){alert('저장 실패: '+err.message);}
 }
@@ -1338,8 +1280,8 @@ async function copyLastWeekTT(){
   if(getWeekSlots().length>0&&!confirm('이미 슬롯이 있습니다. 추가로 복사할까요?'))return;
   const thisDates=weekDates(currentWeekThursday).map(fmtDate);
   for(const s of lastSlots){
-    const newSlot={id:null,date:thisDates[lastDates.indexOf(s.date)],start:s.start,end:s.end,workHours:s.workHours,position:s.position,count:1,assigned:[]};
-    await dbSaveSlot(newSlot);slots.push(newSlot);
+    const ns={id:null,date:thisDates[lastDates.indexOf(s.date)],start:s.start,end:s.end,workHours:s.workHours,position:s.position,count:1,assigned:[]};
+    await dbSaveSlot(ns);slots.push(ns);
   }
   renderTimetablePage();showToast('✅ 전주 슬롯 복사 완료!');
 }
@@ -1379,19 +1321,18 @@ async function saveStaff(){
   const timePref=[...document.querySelectorAll('#s-timepref input:checked')].map(c=>c.value);
   const positions=[...document.querySelectorAll('#s-positions input:checked')].map(c=>c.value);
   const type=document.getElementById('s-type').value;
-  const isAdmin=document.getElementById('s-is-admin').checked;
+  const isAdminVal=document.getElementById('s-is-admin').checked;
   const contractStart=document.getElementById('s-contract-start').value;
   const contractEnd=document.getElementById('s-contract-end').value;
   const note=document.getElementById('s-note').value.trim();
   const editId=document.getElementById('edit-staff-id').value;
-  const obj={name,empno,days,timePref,positions,type,isAdmin,contractStart,contractEnd,note};
+  const obj={name,empno,days,timePref,positions,type,isAdmin:isAdminVal,contractStart,contractEnd,note};
   try{
     if(editId){const s=staff.find(x=>x.id==editId);if(s){Object.assign(s,obj);await dbSaveStaff(s);}closeModal('modal-staff');}
     else{
-      const newS={id:null,...obj};await dbSaveStaff(newS);staff.push(newS);
+      const ns={id:null,...obj};await dbSaveStaff(ns);staff.push(ns);
       ['s-name','s-empno','s-contract-start','s-contract-end','s-note'].forEach(id=>document.getElementById(id).value='');
-      document.getElementById('s-type').value='드리미';
-      document.getElementById('s-is-admin').checked=false;
+      document.getElementById('s-type').value='드리미';document.getElementById('s-is-admin').checked=false;
       document.querySelectorAll('#s-days input').forEach(c=>c.checked=true);
       document.querySelectorAll('#s-timepref input').forEach(c=>c.checked=false);
       document.querySelectorAll('#s-positions input').forEach(c=>c.checked=false);
@@ -1436,9 +1377,8 @@ function runAutoAssign(){
   if(!dreamy.length){alert('드리미 직원이 없습니다.');return;}
   const assignableSlots=wSlots.filter(s=>s.position!=='직원');
   assignableSlots.forEach(s=>s.assigned=[]);
-  const workCount={},lastDate={},lastPos={};
-  dreamy.forEach(s=>{workCount[s.id]=0;lastDate[s.id]=null;lastPos[s.id]=null;});
-  const aQC={};dreamy.forEach(s=>{aQC[s.id]={};});
+  const workCount={},lastDate={},lastPos={},aQC={};
+  dreamy.forEach(s=>{workCount[s.id]=0;lastDate[s.id]=null;lastPos[s.id]=null;aQC[s.id]={};});
   function canAssign(s,slot){
     const dow=new Date(slot.date).getDay();
     if(!(s.days||[]).includes(dow))return false;
@@ -1467,7 +1407,7 @@ function runAutoAssign(){
   const unfilled=assignableSlots.filter(s=>(s.assigned||[]).length<(s.count||1));
   const under=dreamy.filter(s=>workCount[s.id]>0&&workCount[s.id]<3);
   let html=`<div class="alert alert-success">✅ 편성 완료! 드리미 ${dreamy.length}명, 총 ${assignableSlots.length}개 슬롯</div>`;
-  if(unfilled.length){html+=`<div class="alert alert-warning">⚠️ 미배정 ${unfilled.length}건 — ${unfilled.map(s=>`${s.date.slice(5)} ${s.position} ${s.start}`).join(' / ')}</div>`;}
+  if(unfilled.length)html+=`<div class="alert alert-warning">⚠️ 미배정 ${unfilled.length}건 — ${unfilled.map(s=>`${s.date.slice(5)} ${s.position} ${s.start}`).join(' / ')}</div>`;
   if(under.length)html+=`<div class="alert alert-warning">⚠️ 주 3일 미달: ${under.map(s=>s.name).join(', ')}</div>`;
   document.getElementById('assign-result').innerHTML=html;
   renderResultTT();document.getElementById('result-card').style.display='block';
@@ -1486,12 +1426,11 @@ function renderOneResultDay(idx){
 async function saveWeek(){
   const key=weekKey(currentWeekThursday);
   savedWeeks[key]={label:weekLabel(currentWeekThursday),slots:JSON.parse(JSON.stringify(getWeekSlots()))};
-  confirmedWeeks.add(key); // 확정 처리
+  confirmedWeeks.add(key);
   try{
     await Promise.all(getWeekSlots().map(slot=>dbSaveSlot(slot)));
     await dbSaveAssignments(key);
-    // 확정 여부 settings에 저장
-    await sb.from('settings').upsert({key:`confirmed_${key}`, value:'true'});
+    await sb.from('settings').upsert({key:`confirmed_${key}`,value:'true'});
     showToast(`✅ ${weekLabel(currentWeekThursday)} 확정 저장 완료!`);
   }catch(err){alert('저장 실패: '+err.message);}
   updateDashboard();
@@ -1505,63 +1444,93 @@ function resetAssign(){
 }
 
 // ===== ADMIN =====
-async function saveRequestPeriod() {
-  const start = document.getElementById('request-start').value;
-  const end = document.getElementById('request-end').value;
-  if (!start || !end) { alert('시작과 마감 일시를 모두 입력해주세요.'); return; }
-  if (new Date(start) >= new Date(end)) { alert('마감 일시가 시작 일시보다 늦어야 합니다.'); return; }
-  requestPeriod = { start, end };
-  try {
-    await sb.from('settings').upsert({ key: 'request_period', value: JSON.stringify(requestPeriod) });
-    renderRequestPeriodStatus();
-    showToast('✅ 신청 기한이 저장됐습니다!');
-  } catch(err) { alert('저장 실패: ' + err.message); }
+function calcActualWorkHours(h){return h>=4?h-0.5:h;}
+function initStatMonthSelect(){
+  const sel=document.getElementById('stat-month');if(!sel)return;sel.innerHTML='';
+  const now=new Date();
+  for(let i=-3;i<=3;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);const ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;const opt=document.createElement('option');opt.value=ym;opt.textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월`;if(i===0)opt.selected=true;sel.appendChild(opt);}
+}
+function renderMonthlyStats(){
+  const sel=document.getElementById('stat-month');
+  const ym=sel?.value||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+  const el=document.getElementById('monthly-stats-content');
+  const monthSlots=slots.filter(s=>s.date.startsWith(ym)&&s.position!=='직원');
+  const dreamy=staff.filter(s=>s.type==='드리미');
+  if(!monthSlots.length){el.innerHTML='<div class="alert alert-warning">해당 월에 편성된 슬롯이 없습니다.</div>';return;}
+  const statMap={};
+  dreamy.forEach(s=>{statMap[s.id]={name:s.name,empno:s.empno||'-',days:new Set(),slotHours:0,actualHours:0};});
+  monthSlots.forEach(sl=>{
+    (sl.assigned||[]).forEach(name=>{
+      const s=staff.find(x=>x.name===name&&x.type==='드리미');if(!s||!statMap[s.id])return;
+      statMap[s.id].days.add(sl.date);statMap[s.id].slotHours+=sl.workHours||0;statMap[s.id].actualHours+=calcActualWorkHours(sl.workHours||0);
+    });
+  });
+  const active=Object.values(statMap).filter(s=>s.days.size>0);
+  const totalSlot=active.reduce((a,s)=>a+s.slotHours,0);
+  const totalActual=active.reduce((a,s)=>a+s.actualHours,0);
+  let html=`<div class="grid4" style="margin-bottom:16px;">
+    <div class="summary-stat"><div class="snum">${active.length}명</div><div class="slbl">이번 달 출근 드리미</div></div>
+    <div class="summary-stat"><div class="snum">${totalActual.toFixed(1)}h</div><div class="slbl">드리미 총 실근무시간</div></div>
+    <div class="summary-stat"><div class="snum">${totalSlot.toFixed(1)}h</div><div class="slbl">총 슬롯시간 (휴게 포함)</div></div>
+    <div class="summary-stat"><div class="snum">${(totalSlot-totalActual).toFixed(1)}h</div><div class="slbl">총 휴게시간</div></div>
+  </div>
+  <table class="week-summary-table"><thead><tr><th>이름</th><th>사번</th><th>근무일수</th><th>슬롯시간</th><th>휴게시간</th><th>실근무시간</th></tr></thead><tbody>`;
+  active.sort((a,b)=>b.actualHours-a.actualHours).forEach(s=>{
+    html+=`<tr><td><strong>${s.name}</strong></td><td style="color:#888;">${s.empno}</td><td>${s.days.size}일</td>
+      <td>${s.slotHours.toFixed(1)}h</td><td style="color:#92400e;">${(s.slotHours-s.actualHours).toFixed(1)}h</td>
+      <td><strong style="color:#1e3a5f;">${s.actualHours.toFixed(1)}h</strong></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  el.innerHTML=html;
+}
+function exportMonthlyStatsExcel(){
+  const sel=document.getElementById('stat-month');
+  const ym=sel?.value||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+  const monthSlots=slots.filter(s=>s.date.startsWith(ym)&&s.position!=='직원');
+  const dreamy=staff.filter(s=>s.type==='드리미');
+  const statMap={};
+  dreamy.forEach(s=>{statMap[s.id]={name:s.name,empno:s.empno||'-',days:new Set(),slotHours:0,actualHours:0};});
+  monthSlots.forEach(sl=>{
+    (sl.assigned||[]).forEach(name=>{
+      const s=staff.find(x=>x.name===name&&x.type==='드리미');if(!s||!statMap[s.id])return;
+      statMap[s.id].days.add(sl.date);statMap[s.id].slotHours+=sl.workHours||0;statMap[s.id].actualHours+=calcActualWorkHours(sl.workHours||0);
+    });
+  });
+  const active=Object.values(statMap).filter(s=>s.days.size>0).sort((a,b)=>b.actualHours-a.actualHours);
+  const rows=[[`${ym} 드리미 근무 통계`],[],['이름','사번','근무일수','슬롯시간(h)','휴게시간(h)','실근무시간(h)']];
+  active.forEach(s=>rows.push([s.name,s.empno,s.days.size,s.slotHours.toFixed(1),(s.slotHours-s.actualHours).toFixed(1),s.actualHours.toFixed(1)]));
+  rows.push([]);
+  const tSlot=active.reduce((a,s)=>a+s.slotHours,0),tActual=active.reduce((a,s)=>a+s.actualHours,0);
+  rows.push(['합계','',active.reduce((a,s)=>a+s.days.size,0),tSlot.toFixed(1),(tSlot-tActual).toFixed(1),tActual.toFixed(1)]);
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:14},{wch:10},{wch:8},{wch:12},{wch:10},{wch:12}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`${ym}근무통계`);
+  XLSX.writeFile(wb,`드리미_근무통계_${ym}.xlsx`);
 }
 
-async function clearRequestPeriod() {
-  if (!confirm('신청 기한을 해제할까요? 기한 없이 상시 신청 가능해집니다.')) return;
-  requestPeriod = { start: null, end: null };
-  try {
-    await sb.from('settings').upsert({ key: 'request_period', value: 'null' });
-    document.getElementById('request-start').value = '';
-    document.getElementById('request-end').value = '';
-    renderRequestPeriodStatus();
-    showToast('✅ 신청 기한이 해제됐습니다.');
-  } catch(err) { alert('저장 실패: ' + err.message); }
+async function saveRequestPeriod(){
+  const start=document.getElementById('request-start').value;
+  const end=document.getElementById('request-end').value;
+  if(!start||!end){alert('시작과 마감 일시를 모두 입력해주세요.');return;}
+  if(new Date(start)>=new Date(end)){alert('마감 일시가 시작 일시보다 늦어야 합니다.');return;}
+  requestPeriod={start,end};
+  try{await sb.from('settings').upsert({key:'request_period',value:JSON.stringify(requestPeriod)});renderRequestPeriodStatus();showToast('✅ 신청 기한이 저장됐습니다!');}
+  catch(err){alert('저장 실패: '+err.message);}
+}
+async function clearRequestPeriod(){
+  if(!confirm('신청 기한을 해제할까요?'))return;
+  requestPeriod={start:null,end:null};
+  try{await sb.from('settings').upsert({key:'request_period',value:'null'});document.getElementById('request-start').value='';document.getElementById('request-end').value='';renderRequestPeriodStatus();showToast('✅ 신청 기한이 해제됐습니다.');}
+  catch(err){alert('저장 실패: '+err.message);}
+}
+function renderRequestPeriodStatus(){
+  const el=document.getElementById('request-period-preview');
+  if(!requestPeriod.start||!requestPeriod.end){el.innerHTML='<div class="alert alert-info">현재 신청 기한이 설정되지 않았습니다. (상시 신청 가능)</div>';return;}
+  const now=new Date(),start=new Date(requestPeriod.start),end=new Date(requestPeriod.end);
+  const statusHtml=now<start?'<span class="tag tag-orange">⏳ 신청 대기중</span>':now>end?'<span class="tag tag-red">🔒 신청 마감</span>':'<span class="tag tag-green">✅ 신청 진행중</span>';
+  el.innerHTML=`<div style="background:#f8fafc;border-radius:8px;padding:12px;font-size:12px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><strong>현재 신청 기한</strong>${statusHtml}</div><div style="color:#555;">📅 시작: <strong>${requestPeriod.start.replace('T',' ')}</strong></div><div style="color:#555;margin-top:4px;">📅 마감: <strong>${requestPeriod.end.replace('T',' ')}</strong></div></div>`;
 }
 
-function renderRequestPeriodStatus() {
-  const el = document.getElementById('request-period-preview');
-  const statusEl = document.getElementById('request-period-status');
-  if (!requestPeriod.start || !requestPeriod.end) {
-    el.innerHTML = '<div class="alert alert-info">현재 신청 기한이 설정되지 않았습니다. (상시 신청 가능)</div>';
-    if (statusEl) statusEl.textContent = '';
-    return;
-  }
-  const now = new Date();
-  const start = new Date(requestPeriod.start);
-  const end = new Date(requestPeriod.end);
-  let statusHtml, statusText;
-  if (now < start) {
-    statusHtml = `<span class="tag tag-orange">⏳ 신청 대기중</span>`;
-    statusText = '아직 시작 전';
-  } else if (now > end) {
-    statusHtml = `<span class="tag tag-red">🔒 신청 마감</span>`;
-    statusText = '기한 종료';
-  } else {
-    statusHtml = `<span class="tag tag-green">✅ 신청 진행중</span>`;
-    statusText = '진행 중';
-  }
-  el.innerHTML = `
-    <div style="background:#f8fafc;border-radius:8px;padding:12px;font-size:12px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <strong>현재 신청 기한</strong> ${statusHtml}
-      </div>
-      <div style="color:#555;">📅 시작: <strong>${requestPeriod.start.replace('T',' ')}</strong></div>
-      <div style="color:#555;margin-top:4px;">📅 마감: <strong>${requestPeriod.end.replace('T',' ')}</strong></div>
-    </div>`;
-  if (statusEl) statusEl.textContent = statusText;
-}
+async function saveQuota(){
   const v=parseInt(document.getElementById('admin-quota').value);
   if(isNaN(v)||v<0){alert('올바른 숫자를 입력해주세요.');return;}
   weekendQuota=v;
@@ -1580,16 +1549,16 @@ function renderQuotaStatus(){
   if(!dreamy.length){el.innerHTML='<div class="alert alert-info">드리미 직원이 없습니다.</div>';return;}
   let html=`<table><thead><tr><th>이름</th><th>사번</th><th>신청 횟수</th><th>잔여</th><th>상태</th></tr></thead><tbody>`;
   dreamy.forEach(s=>{
-    const used=getQuotaUsed(s.id,ym);const remain=Math.max(0,weekendQuota-used);
-    const pct=weekendQuota>0?used/weekendQuota:0;
+    const used=getQuotaUsed(s.id,ym);const remain=Math.max(0,weekendQuota-used);const pct=weekendQuota>0?used/weekendQuota:0;
     html+=`<tr><td><strong>${s.name}</strong></td><td style="color:#888;">${s.empno||'-'}</td>
       <td><span class="quota-badge ${pct>=1?'quota-over':pct>=0.75?'quota-warn':'quota-ok'}">${used}/${weekendQuota}회</span></td>
-      <td>${remain}회</td>
-      <td><span class="tag ${pct>=1?'tag-red':pct>=0.75?'tag-orange':'tag-green'}">${pct>=1?'한도 초과':'정상'}</span></td></tr>`;
+      <td>${remain}회</td><td><span class="tag ${pct>=1?'tag-red':pct>=0.75?'tag-orange':'tag-green'}">${pct>=1?'한도 초과':'정상'}</span></td></tr>`;
   });
   el.innerHTML=html+'</tbody></table>';
 }
 async function toggleHoliday(ds){
+  const dow=new Date(ds).getDay();
+  if(dow===0||dow===6){showToast('토·일요일은 자동으로 주말 처리됩니다.');return;}
   if(holidays.has(ds))holidays.delete(ds);else holidays.add(ds);
   try{await dbSaveHolidays();recalcQuotaUsage();renderCalendar();renderQuotaStatus();}
   catch(err){alert('저장 실패: '+err.message);}
@@ -1597,42 +1566,27 @@ async function toggleHoliday(ds){
 function renderCalendar(){
   document.getElementById('cal-month-label').textContent=`${calYear}년 ${calMonth+1}월`;
   const grid=document.getElementById('cal-grid');grid.innerHTML='';
-  const first=new Date(calYear,calMonth,1);
-  const last=new Date(calYear,calMonth+1,0);
-  const startDow=first.getDay();
-  for(let i=0;i<startDow;i++){const d=new Date(calYear,calMonth,-(startDow-i-1));grid.appendChild(makeCalCell(d,true));}
+  const first=new Date(calYear,calMonth,1),last=new Date(calYear,calMonth+1,0),startDow=first.getDay();
+  for(let i=0;i<startDow;i++)grid.appendChild(makeCalCell(new Date(calYear,calMonth,-(startDow-i-1)),true));
   for(let d=1;d<=last.getDate();d++)grid.appendChild(makeCalCell(new Date(calYear,calMonth,d),false));
   const total=startDow+last.getDate();const remain=total%7===0?0:7-(total%7);
   for(let i=1;i<=remain;i++)grid.appendChild(makeCalCell(new Date(calYear,calMonth+1,i),true));
   renderHolidayList();
 }
 function makeCalCell(date,otherMonth){
-  const ds=fmtDate(date);const dow=date.getDay();
-  const isHoliday=holidays.has(ds);
-  const isWeekend=dow===0||dow===6;
-  const isToday=ds===fmtDate(new Date());
+  const ds=fmtDate(date),dow=date.getDay();
+  const isHoliday=holidays.has(ds),isWeekend=dow===0||dow===6,isToday=ds===fmtDate(new Date());
   const cell=document.createElement('div');
-  cell.className='cal-cell'
-    +(otherMonth?' other-month':'')
-    +(isWeekend?' weekend':'')
-    +(isHoliday?' holiday':'')
-    +(isWeekend&&!otherMonth?' holiday':'') // 토·일 자동 배경
-    +(isToday?' today':'');
+  cell.className='cal-cell'+(otherMonth?' other-month':'')+(isWeekend?' weekend':'')+(isHoliday||isWeekend&&!otherMonth?' holiday':'')+(isToday?' today':'');
   cell.innerHTML=`<span>${date.getDate()}</span>${(isHoliday||isWeekend)&&!otherMonth?'<span class="holiday-dot"></span>':''}`;
   if(!otherMonth){
-    if(isWeekend){
-      cell.title='토·일요일은 자동으로 주말 처리됩니다';
-      cell.style.cursor='default';
-    } else {
-      cell.title=isHoliday?'공휴일 해제 클릭':'공휴일 등록 클릭';
-      cell.onclick=()=>toggleHoliday(ds);
-    }
+    if(isWeekend){cell.title='토·일은 자동 주말 처리';cell.style.cursor='default';}
+    else{cell.title=isHoliday?'공휴일 해제':'공휴일 등록';cell.onclick=()=>toggleHoliday(ds);}
   }
   return cell;
 }
 function renderHolidayList(){
-  const el=document.getElementById('holiday-list');
-  const sorted=[...holidays].sort();
+  const el=document.getElementById('holiday-list');const sorted=[...holidays].sort();
   if(!sorted.length){el.textContent='등록된 공휴일이 없습니다.';return;}
   el.innerHTML=sorted.map(ds=>{const d=new Date(ds);return `<span style="display:inline-flex;align-items:center;gap:4px;margin:3px;background:#fee2e2;padding:3px 8px;border-radius:8px;"><span style="color:#991b1b;font-weight:600;">${ds} (${DAYS_KO[d.getDay()]})</span><button onclick="toggleHoliday('${ds}')" style="border:none;background:none;cursor:pointer;color:#991b1b;font-size:12px;padding:0;">✕</button></span>`;}).join('');
 }
@@ -1643,7 +1597,7 @@ function calNextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderC
 function saveAppData(){
   const data={version:2,savedAt:new Date().toLocaleString('ko-KR'),staff,slots,weeklyPrefs,events,savedWeeks,formSubmissions,staffIdCtr,weekendQuota,holidays:[...holidays]};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`근무편성_백업_${fmtDate(new Date())}.json`;a.click();URL.revokeObjectURL(url);
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`드리미_근무편성_백업_${fmtDate(new Date())}.json`;a.click();URL.revokeObjectURL(url);
   document.getElementById('save-status').textContent=`✅ 백업 완료 — ${new Date().toLocaleString('ko-KR')}`;
 }
 function exportScheduleExcel(){
@@ -1655,7 +1609,8 @@ function exportScheduleExcel(){
     gs.forEach((slot,idx)=>{
       const ss=timeToSlot(slot.start),es=timeToSlot(slot.end);
       const cells=Array.from({length:OP_SLOTS},(_,i)=>(i>=ss&&i<es)?1:'');
-      (slot.assigned||[]).forEach(name=>rows.push([idx+1,name,slot.position,slot.start,slot.end,(slot.workHours||0).toFixed(1)+'h',breakTime(slot.workHours||0)+'분',...cells]));
+      const brk=breakTime(slot.workHours||0);
+      (slot.assigned||[]).forEach(name=>rows.push([idx+1,name,slot.position,slot.start,slot.end,(slot.workHours||0).toFixed(1)+'h',brk+'분',...cells]));
     });
   });
   const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'근무표');XLSX.writeFile(wb,`근무표_${fmtDate(currentWeekThursday)}.xlsx`);
@@ -1681,21 +1636,20 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 
-// INIT
-// 로그인 버튼 이벤트 (모바일 호환)
-document.getElementById('btn-login').addEventListener('click', doLogin);
-document.getElementById('btn-setpw').addEventListener('click', doSetPassword);
-document.getElementById('login-pw').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
-document.getElementById('new-pw-confirm').addEventListener('keydown', e=>{ if(e.key==='Enter') doSetPassword(); });
+// ===== INIT =====
+document.getElementById('btn-login').addEventListener('click',doLogin);
+document.getElementById('btn-setpw').addEventListener('click',doSetPassword);
+document.getElementById('btn-logout').addEventListener('click',doLogout);
+document.getElementById('btn-changepw').addEventListener('click',()=>openModal('modal-changepw'));
+document.getElementById('login-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('new-pw-confirm').addEventListener('keydown',e=>{if(e.key==='Enter')doSetPassword();});
 
-// 세션 복원
-const saved=sessionStorage.getItem('currentUser');
-if(saved){
-  currentUser=JSON.parse(saved);
+const savedUser=sessionStorage.getItem('currentUser');
+if(savedUser){
+  currentUser=JSON.parse(savedUser);
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
-  applyUserPermissions();
-  dbLoadAll();
+  applyUserPermissions();dbLoadAll();
 }
 updateAllLabels();
 </script>
