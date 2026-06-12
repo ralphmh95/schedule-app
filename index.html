@@ -1681,7 +1681,13 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 
-// ===== INIT =====
+// INIT
+// 로그인 버튼 이벤트 (모바일 호환)
+document.getElementById('btn-login').addEventListener('click', doLogin);
+document.getElementById('btn-setpw').addEventListener('click', doSetPassword);
+document.getElementById('login-pw').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('new-pw-confirm').addEventListener('keydown', e=>{ if(e.key==='Enter') doSetPassword(); });
+
 // 세션 복원
 const saved=sessionStorage.getItem('currentUser');
 if(saved){
